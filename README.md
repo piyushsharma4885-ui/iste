@@ -52,3 +52,4 @@ src/effects.js      night tint, lamp glows, vignette, export, lamp finder
 ## Licence
 
 MIT. See `LICENSE`.
+
