@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="Relight: move the sun across a room photo and see how light falls. Runs entirely in your browser." />
+  <title>Relight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="mesh" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+  <canvas id="backdrop" aria-hidden="true"></canvas>
+
+  <header id="wordmark" class="glass enter" style="--i: 0">
+    <span class="wordmark-text">Relight</span>
+  </header>
+
+  <main id="stage">
+    <section id="empty" class="glass drop-zone" aria-labelledby="drop-title">
+      <h1 id="drop-title">Drop a room photo</h1>
+      <button id="choose" class="btn-primary" type="button">Choose a photo</button>
+      <p class="fine">Your photo stays on this device. Nothing is uploaded.</p>
+    </section>
+
+    <figure id="figure">
+      <canvas id="view" aria-label="Relit room photo. Use the sun dial or the time slider to change the light. Click the photo to add a lamp."></canvas>
+    </figure>
+  </main>
+
+  <aside id="panel" class="glass enter" style="--i: 1" aria-label="Light controls">
+    <button id="grabber" class="grabber" type="button" aria-expanded="true" aria-controls="panel-body" aria-label="Expand or collapse controls"></button>
+    <div id="panel-body" class="panel-body">
+      <div class="dial-wrap">
+        <div id="dial" class="dial" role="slider" tabindex="0"
+             aria-label="Sun direction. Use arrow keys to move the sun. Home returns the sun to the time of day."
+             aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Sun straight ahead">
+          <span class="ring r1"></span>
+          <span class="ring r2"></span>
+          <span class="hair hx"></span>
+          <span class="hair hy"></span>
+          <span id="puck" class="puck"></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="time">Time of day</label>
+        <output id="timeOut" for="time">12:00 pm</output>
+      </div>
+      <input id="time" class="range" type="range" min="6" max="22" step="0.25" value="12" />
+
+      <div class="row">
+        <label for="strength">Sun strength</label>
+        <output id="strengthOut" for="strength">80%</output>
+      </div>
+      <input id="strength" class="range" type="range" min="0" max="100" step="1" value="80" />
+
+      <div class="row">
+        <label for="depth">Depth strength</label>
+        <output id="depthOut" for="depth">45</output>
+      </div>
+      <input id="depth" class="range" type="range" min="0" max="100" step="1" value="45" />
+
+      <p class="section-title">Staging mood</p>
+      <div class="actions" id="moods" role="group" aria-label="Staging moods">
+        <button type="button" class="pill" data-mood="hotel" aria-pressed="false">Hotel welcome</button>
+        <button type="button" class="pill" data-mood="airbnb" aria-pressed="false">Airbnb evening</button>
+        <button type="button" class="pill" data-mood="airy" aria-pressed="false">Bright and airy</button>
+        <button type="button" class="pill" data-mood="romantic" aria-pressed="false">Romantic</button>
+      </div>
+
+      <p class="section-title" id="inspectorTitle">New lamps</p>
+
+      <div class="actions" id="fixtures" role="group" aria-label="Fixture type">
+        <button type="button" class="pill" data-fixture="ceiling" aria-pressed="false">Ceiling</button>
+        <button type="button" class="pill" data-fixture="floor" aria-pressed="false">Floor</button>
+        <button type="button" class="pill" data-fixture="sconce" aria-pressed="false">Sconce</button>
+        <button type="button" class="pill" data-fixture="table" aria-pressed="false">Table</button>
+        <button type="button" class="pill" data-fixture="accent" aria-pressed="false">Accent</button>
+      </div>
+
+      <div class="row">
+        <label for="kelvin">Colour temperature</label>
+        <output id="kelvinOut" for="kelvin">2700 K</output>
+      </div>
+      <input id="kelvin" class="range kelvin" type="range" min="2200" max="6500" step="50" value="2700" />
+
+      <div class="row">
+        <label for="intensity">Intensity</label>
+        <output id="intensityOut" for="intensity">60%</output>
+      </div>
+      <input id="intensity" class="range" type="range" min="0" max="100" step="1" value="60" />
+
+      <div class="row">
+        <label for="lampStrength">Lamp brightness</label>
+        <output id="lampOut" for="lampStrength">0%</output>
+      </div>
+      <input id="lampStrength" class="range" type="range" min="0" max="100" step="1" value="0" />
+
+      <div class="actions">
+        <button id="deleteLamp" class="pill" type="button" disabled>Delete lamp</button>
+        <button id="clearLamps" class="pill" type="button">Clear lamps</button>
+        <button id="showDepth" class="pill" type="button" aria-pressed="false">Depth map</button>
+      </div>
+
+      <p class="hint">Click the photo to add a light. Click near an existing light to edit it. Hold Space to compare with the original.</p>
+
+      <div class="actions">
+        <button id="newPhoto" class="pill" type="button">New photo</button>
+      </div>
+    </div>
+  </aside>
+
+  <nav id="dock" class="glass enter" style="--i: 2" aria-label="Presets and actions">
+    <div id="presets" class="seg" role="group" aria-label="Presets">
+      <span id="thumb" class="thumb" aria-hidden="true"></span>
+      <button type="button" data-preset="morning" aria-pressed="false">Morning</button>
+      <button type="button" data-preset="noon" aria-pressed="false">Noon</button>
+      <button type="button" data-preset="golden" aria-pressed="false">Golden hour</button>
+      <button type="button" data-preset="cozy" aria-pressed="false">Cozy night</button>
+    </div>
+    <button id="compare" class="circle" type="button" aria-label="Hold to compare with the original" aria-pressed="false" title="Hold to compare (hold Space)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button id="export" class="circle primary" type="button" aria-label="Export PNG" title="Export PNG">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+    </button>
+  </nav>
+
+  <div id="status" class="glass enter" style="--i: 3" role="status" aria-live="polite" data-error="false">Starting</div>
+
+  <input id="file" type="file" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true" />
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
